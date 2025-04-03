@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 
 root = ctk.CTk()
-root.title("surak1m Customer Registration Screen")
+root.title("SignUp Screen")
 root.geometry("911x651")
 root.resizable(False,False)
 
