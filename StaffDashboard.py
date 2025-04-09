@@ -4,7 +4,7 @@ from PIL import Image
 
 app = ctk.CTk(fg_color="#7F5B6A")
 app.title("Staff Dashboard")
-app.geometry("1111x851")
+app.geometry("1111x750")
 app.resizable(False, False)
 
 def resize_image(size, image_url):

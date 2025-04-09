@@ -1,11 +1,31 @@
 import customtkinter as ctk
 from PIL import ImageTk, Image
 import subprocess  # To open new windows/scripts
+import mysql.connector
+from tkinter import messagebox
 
 # App Window
 app = ctk.CTk()
 app.title("Event Ease")
 app.geometry("1111x840")
+
+# --- MySQL DB Connection ---
+def get_connection():
+    return mysql.connector.connect(
+        host="141.209.241.57",
+        user="tiruv1h",
+        password="mypass",
+        database="BIS698W1830_GRP1"
+    )
+
+# --- Test Connection ---
+def test_db_connection():
+    try:
+        conn = get_connection()
+        messagebox.showinfo("Database", "Connected to the database successfully!")
+        conn.close()
+    except mysql.connector.Error as err:
+        messagebox.showerror("Database Error", f"Connection failed:\n{err}")
 
 # Functions to open login and signup pages
 def open_signup():
@@ -39,7 +59,7 @@ for label in ["HOME", "EVENT SERVICES"]:
     ctk.CTkButton(nav_left, text=label, fg_color="transparent", hover_color="#D6D6D6",
                   text_color="black", font=("Inria Serif", 28), width=130, height=40).pack(side="left", padx=15)
 
-# Right Nav Buttons with navigation functionality
+# Right Nav Buttons
 ctk.CTkButton(nav_right, text="SIGN UP", fg_color="transparent", hover_color="#D6D6D6",
               text_color="black", font=("Inria Serif", 28), width=130, height=40, command=open_signup).pack(side="left", padx=15)
 
@@ -98,6 +118,9 @@ social_icon = ctk.CTkImage(light_image=Image.open("icons/social-media.png"), siz
 
 ctk.CTkLabel(share, image=instagram_icon, text=" @EventEase", compound="left", font=("Georgia", 13), text_color="white").pack(anchor="w")
 ctk.CTkLabel(share, image=social_icon, text=" EventEase", compound="left", font=("Georgia", 13), text_color="white").pack(anchor="w")
+
+# --- Initial Actions ---
+test_db_connection()
 
 # Run the app
 app.mainloop()
