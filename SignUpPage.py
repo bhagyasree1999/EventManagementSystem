@@ -12,7 +12,7 @@ right_login_frame.pack_propagate(False)
 right_login_frame.place(x = 455,y =0)
 
 #Left login_frame
-left_login_frame = ctk.CTkFrame(root,fg_color = "#6B5720",width =455,height =651, corner_radius= 0)
+left_login_frame = ctk.CTkFrame(root,fg_color = "#7F5B6A",width =455,height =651, corner_radius= 0)
 left_login_frame.pack_propagate(False)
 left_login_frame.place(x = 0,y =0)
 
@@ -58,7 +58,7 @@ password_entry = ctk.CTkEntry(inner_left_frame,text_color = "#D1D1D1",font = ('i
 password_entry.place(x = 50,y = 370)
 
 #SignUp_button
-SignUp_button = ctk.CTkButton(inner_left_frame,text = "SignUp",text_color = "#FFFFFF",width = 90,height = 35,fg_color = "#6B5720",hover_color = "#F6CA51",font = ('inter',14))
+SignUp_button = ctk.CTkButton(inner_left_frame,text = "SignUp",text_color = "#FFFFFF",width = 90,height = 35,fg_color = "#7F5B6A",hover_color = "grey",font = ('inter',14))
 SignUp_button.place(x = 120, y = 440)
 
 #Text under SignUp button

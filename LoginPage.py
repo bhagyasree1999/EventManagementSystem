@@ -15,14 +15,14 @@ def resize_image(size, image_url):
     resized_ctk_image = CTkImage(light_image=original_image, size=size)
     return resized_ctk_image
 
-login_logo = resize_image((268,163), "images/loginlogo.png")
+login_logo = resize_image((268,163), "images/loginlogo.jpg")
 logo_label = ctk.CTkLabel(app, text="", image=login_logo, fg_color="#EBE6E6")
-logo_label.place(x=450, y=57)
+logo_label.place(x=400, y=57)
 
 #Login Image
-login_logo = resize_image((268,163),"images/loginlogo.png")
+login_logo = resize_image((268,163),"images/loginlogo.jpg")
 logo_label = ctk.CTkLabel(app,text = "",image = login_logo,fg_color = "#EBE6E6")
-logo_label.place(x = 450, y = 57)
+logo_label.place(x = 400, y = 57)
 
 
 #Text Below Login Logo
@@ -54,17 +54,26 @@ role_label = ctk.CTkLabel(center_frame,text = "Role",text_color = "#3F5861",font
 role_label.place(x = 298, y = 257)
 
 #DropBox for Role
-drop_menu=ctk.CTkOptionMenu(center_frame,values=["Admin","Customer","Staff"],fg_color="#6B5720",width=351,height=47)
+drop_menu=ctk.CTkOptionMenu(center_frame,values=["Admin","Customer","Staff"],fg_color="grey",width=351,height=47)
 drop_menu.set("Select a Role")
 drop_menu.place(x=302,y=291)
 
 #login_button
-login_button = ctk.CTkButton(center_frame,text = "Login",text_color = "#FFFFFF",width = 146,height = 45,fg_color = "#6B5720",hover_color = "#F6CA51",font = ('inter',14))
+login_button = ctk.CTkButton(center_frame,text = "Login",text_color = "#FFFFFF",width = 146,height = 45,fg_color = "#7F5B6A",hover_color = "grey",font = ('inter',14))
 login_button.place(x = 411, y = 381)
 
 #Text under Login button
-register_label = ctk.CTkLabel(center_frame,text = "Don’t have an account? Sign Up"
-,text_color = '#1E1E1E',font = ('Inter',16)).place(x = 363, y = 436)
+def open_signup():
+    print("Redirecting to Sign Up page...")  # You can later replace this with frame navigation or a new window
+
+# Text under Login button with clickable 'Sign Up'
+signup_label = ctk.CTkLabel(center_frame, text="Don’t have an account? Sign Up",
+                            text_color="#1E1E1E", font=('Inter', 16), cursor="hand2")
+signup_label.place(x=363, y=436)
+
+# Bind click event
+signup_label.bind("<Button-1>", lambda e: open_signup())
+
 
 
 app.mainloop()
