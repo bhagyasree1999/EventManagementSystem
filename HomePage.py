@@ -18,15 +18,6 @@ def get_connection():
         database="BIS698W1830_GRP1"
     )
 
-# --- Test Connection ---
-def test_db_connection():
-    try:
-        conn = get_connection()
-        messagebox.showinfo("Database", "Connected to the database successfully!")
-        conn.close()
-    except mysql.connector.Error as err:
-        messagebox.showerror("Database Error", f"Connection failed:\n{err}")
-
 # Functions to open login and signup pages
 def open_signup():
     subprocess.Popen(["python", "SignUpPage.py"])
@@ -118,9 +109,6 @@ social_icon = ctk.CTkImage(light_image=Image.open("icons/social-media.png"), siz
 
 ctk.CTkLabel(share, image=instagram_icon, text=" @EventEase", compound="left", font=("Georgia", 13), text_color="white").pack(anchor="w")
 ctk.CTkLabel(share, image=social_icon, text=" EventEase", compound="left", font=("Georgia", 13), text_color="white").pack(anchor="w")
-
-# --- Initial Actions ---
-test_db_connection()
 
 # Run the app
 app.mainloop()

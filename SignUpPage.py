@@ -4,6 +4,7 @@ from PIL import Image
 import subprocess
 import mysql.connector
 from tkinter import messagebox
+import re
 
 # MySQL connection function
 def get_connection():
@@ -13,6 +14,23 @@ def get_connection():
         password="mypass",
         database="BIS698W1830_GRP1"
     )
+
+# Email validation
+def is_valid_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+# Password validation
+def is_valid_password(password):
+    pattern = (
+        r'^(?=.*[a-z])'        # at least one lowercase letter
+        r'(?=.*[A-Z])'         # at least one uppercase letter
+        r'(?=.*\d)'            # at least one digit
+        r'(?=.*[@$!%*?&])'     # at least one special character
+        r'[A-Za-z\d@$!%*?&]{8,}$'  # min length 8
+    )
+    return re.match(pattern, password) is not None
+
 
 # App setup
 root = ctk.CTk()
@@ -68,7 +86,7 @@ ctk.CTkLabel(inner_left_frame, text="Password", text_color="#3F5861", font=('int
 password_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE", show="*")
 password_entry.place(x=center_x, y=380)
 
-# --- Role Dropdown ---
+# Role
 ctk.CTkLabel(inner_left_frame, text="Role", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=430)
 
 selected_role = ctk.StringVar(value="Select a Role")
@@ -117,7 +135,22 @@ def signup():
         return
 
     if not all([first_name, last_name, email, password]):
-        messagebox.showerror("Error", "Please fill in all fields.")
+        messagebox.showerror("Error", "All fields are required. Please fill them in.")
+        return
+
+    if not is_valid_email(email):
+        messagebox.showerror("Invalid Email", "Please enter a valid email address.")
+        return
+
+    if not is_valid_password(password):
+        messagebox.showerror(
+            "Invalid Password",
+            "Password must be at least 8 characters long and include:\n"
+            "- One uppercase letter\n"
+            "- One lowercase letter\n"
+            "- One number\n"
+            "- One special character (e.g., @, #, $, !)"
+        )
         return
 
     try:
@@ -156,6 +189,19 @@ ctk_image = ctk.CTkImage(light_image=image, dark_image=image, size=(450, 450))
 
 image_label = ctk.CTkLabel(right_login_frame, image=ctk_image, text="")
 image_label.place(x=(frame_width - 450)//2, y=(frame_height - 450)//2)
+
+# Load and place the home icon at top-left corner
+home_icon = Image.open("icons/home.png").resize((35, 35))
+home_ctk_image = ctk.CTkImage(light_image=home_icon, dark_image=home_icon, size=(35, 35))
+
+def go_home():
+    subprocess.Popen(["python", "HomePage.py"])
+    root.destroy()
+
+home_btn = ctk.CTkButton(root, text="", image=home_ctk_image, width=35, height=35,
+                         fg_color="#7F5B6A", hover_color="grey",
+                         command=go_home)
+home_btn.place(x=15, y=15)
 
 # Start app
 root.mainloop()

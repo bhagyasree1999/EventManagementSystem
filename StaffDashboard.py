@@ -13,18 +13,27 @@ def resize_image(size, image_url):
     return CTkImage(light_image=original_image, size=size)
 
 # Top Frame
-top_frame = ctk.CTkFrame(app, width=1111, height=81, fg_color="#D9D9D9", corner_radius=10)
+top_frame = ctk.CTkFrame(app, width=1111, height=81, fg_color="#D9D9D9", corner_radius=0)
 top_frame.place(x=0, y=0)
+# Tooltip Label (appears below the door icon)
+tooltip_label = ctk.CTkLabel(app, text="Logout", text_color="#000000", fg_color="#FFFFFF",
+                             font=("Segoe UI", 10), corner_radius=4, width=60, height=20)
+tooltip_label.place_forget()  # Hide initially
 
-# Calendar Photo
-calendar = resize_image((64, 64), "icons/calendar.png")
-calendar_label = ctk.CTkLabel(top_frame, text="", image=calendar, fg_color="#D9D9D9")
-calendar_label.place(x=900, y=15)
+def show_tooltip(event):
+    # Tooltip appears just below the door icon
+    tooltip_label.place(x=1010, y=65)
 
-# Menu Photo
-menu = resize_image((64, 64), "icons/Menu.png")
-menu_label = ctk.CTkLabel(top_frame, text="", image=menu, fg_color="#D9D9D9")
-menu_label.place(x=1000, y=15)
+def hide_tooltip(event):
+    tooltip_label.place_forget()
+
+# Door Icon (logout) as CTkLabel to allow hover
+door_icon = resize_image((55, 55), "icons/door.png")
+door_label = ctk.CTkLabel(top_frame, text="", image=door_icon, fg_color="#D9D9D9", cursor="hand2")
+door_label.place(x=1010, y=5)
+door_label.bind("<Enter>", show_tooltip)
+door_label.bind("<Leave>", hide_tooltip)
+door_label.bind("<Button-1>", lambda e: go_home())
 
 # Dashboard text label
 dash_label = ctk.CTkLabel(top_frame, text="STAFF DASHBOARD", text_color="#000000", font=('inter', 40))
