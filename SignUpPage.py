@@ -153,18 +153,36 @@ def signup():
         )
         return
 
+    if role == "admin":
+        table = "admin"
+    elif role == "staff":
+        table = "staff"
+    else:
+        table = "customer"
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        query = """
-            INSERT INTO customer (first_name, last_name, email, password, role)
-            VALUES (%s, %s, %s, %s, %s)
-        """
+        query = f"""
+                INSERT INTO {table} (first_name, last_name, email, password, role)
+                VALUES (%s, %s, %s, %s, %s)
+            """
         cursor.execute(query, (first_name, last_name, email, password, role))
         conn.commit()
         conn.close()
         messagebox.showinfo("Success", f"{role.title()} signed up successfully!")
         open_login()
+    # try:
+    #     conn = get_connection()
+    #     cursor = conn.cursor()
+    #     query = """
+    #         INSERT INTO customer (first_name, last_name, email, password, role)
+    #         VALUES (%s, %s, %s, %s, %s)
+    #     """
+    #     cursor.execute(query, (first_name, last_name, email, password, role))
+    #     conn.commit()
+    #     conn.close()
+    #     messagebox.showinfo("Success", f"{role.title()} signed up successfully!")
+    #     open_login()
 
     except mysql.connector.IntegrityError:
         messagebox.showerror("Signup Error", "Email already exists. Try logging in.")
