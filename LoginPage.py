@@ -1,80 +1,77 @@
 import customtkinter as ctk
-import tkinter as tk
 from PIL import Image
 from customtkinter import CTkImage
 import subprocess
 import mysql.connector
 from tkinter import messagebox
 
-# MySQL connection function
-def get_connection():
-    return mysql.connector.connect(
-        host="141.209.241.57",
-        user="tiruv1h",
-        password="mypass",
-        database="BIS698W1830_GRP1"
-    )
-
-# App Setup
 app = ctk.CTk(fg_color="#D9D9D9")
 app.title("Event Ease Login Page")
-app.geometry("1111x851")
+app.geometry("1111x800")
 app.resizable(False, False)
 
-# Open signup page
+# Open pages
 def open_signup():
     subprocess.Popen(["python", "SignUpPage.py"])
     app.destroy()
 
-# Resize image
+def open_customerdashboard():
+    subprocess.Popen(["python", "CustomerDashboard.py"])
+    app.destroy()
+
+def open_admindashboard():
+    subprocess.Popen(["python", "AdminDashboard.py"])
+    app.destroy()
+
+def open_staffdashboard():
+    subprocess.Popen(["python", "StaffDashboard.py"])
+    app.destroy()
+
+# Resize image function
 def resize_image(size, image_url):
     original_image = Image.open(image_url)
     return CTkImage(light_image=original_image, size=size)
 
-# Top logo
+# Logo and welcome
 login_logo = resize_image((268, 163), "images/loginlogo.jpg")
 ctk.CTkLabel(app, text="", image=login_logo, fg_color="#EBE6E6").place(x=400, y=57)
-
-# Welcome Text
 ctk.CTkLabel(app, text="WELCOME", text_color='#000000', font=('Cinzel', 64, 'bold')).place(x=381, y=225)
 
-# Center Frame
+# Main Frame
 center_frame = ctk.CTkFrame(app, width=951, height=490, fg_color="#FFFFFF", corner_radius=10)
 center_frame.place(x=80, y=311)
 
 field_x = 302
 field_width = 351
 
-# Email Entry
+# Email
 ctk.CTkLabel(center_frame, text="Email", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=35)
-email_entry = ctk.CTkEntry(center_frame, text_color="#000000", font=('inter', 12),
-                           width=field_width, height=47, fg_color="#FEFEFE")
+email_entry = ctk.CTkEntry(center_frame, text_color="#D1D1D1", font=('inter', 12),
+                           width=field_width, height=47, border_width=1, fg_color="#FEFEFE")
 email_entry.place(x=field_x, y=69)
 
-# Password Entry
+# Password
 ctk.CTkLabel(center_frame, text="Password", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=146)
-password_entry = ctk.CTkEntry(center_frame, text_color="#000000", font=('inter', 12),
-                              width=field_width, height=47, fg_color="#FEFEFE", show="*")
+password_var = ctk.StringVar()
+password_entry = ctk.CTkEntry(center_frame, text_color="#D1D1D1", font=('inter', 12),
+                               width=field_width, height=47, border_width=1,
+                               fg_color="#FEFEFE", show="*", textvariable=password_var)
 password_entry.place(x=field_x, y=180)
 
-# Show Password Checkbox BELOW the Password Entry on the right side
-show_password_var = tk.BooleanVar(value=False)
+# Toggle Password Visibility
+def toggle_password_visibility():
+    if show_password.get():
+        password_entry.configure(show="")
+    else:
+        password_entry.configure(show="*")
 
-def toggle_password():
-    password_entry.configure(show="" if show_password_var.get() else "*")
+show_password = ctk.BooleanVar()
+ctk.CTkCheckBox(center_frame, text="Show Password", variable=show_password,
+                command=toggle_password_visibility, font=('inter', 12),
+                text_color="#3F5861", checkbox_width=18, checkbox_height=18).place(x=field_x + 180, y=230)
 
-# Place it just below the password field, aligned right
-show_password_checkbox = ctk.CTkCheckBox(center_frame,
-                                         text="Show Password",
-                                         font=('inter', 12),
-                                         variable=show_password_var,
-                                         command=toggle_password)
-show_password_checkbox.place(x=field_x + field_width - 128, y=235)
-
-# Role Label
-ctk.CTkLabel(center_frame, text="Role", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=270)
-
-# Role Dropdown
+# Role selection
+ctk.CTkLabel(center_frame, text="Role", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=257)
 selected_role = ctk.StringVar(value="Select a Role")
 
 def update_role_text(*args):
@@ -115,60 +112,56 @@ role_btn = ctk.CTkButton(center_frame,
                          command=toggle_dropdown,
                          anchor="w",
                          corner_radius=6)
-role_btn.place(x=field_x, y=305)
+role_btn.place(x=field_x, y=291)
 
-# Login Function with First Name Greeting
+# Login function
 def login():
-    email = email_entry.get().strip()
-    password = password_entry.get().strip()
-    role = selected_role.get().strip().lower()
+    email = email_entry.get()
+    password = password_var.get()
+    role = selected_role.get()
 
-    if role not in ["admin", "customer", "staff"]:
-        messagebox.showerror("Error", "Please select a valid role.")
-        return
-
-    if not all([email, password]):
-        messagebox.showerror("Error", "Please enter both email and password.")
+    if role == "Select a Role":
+        messagebox.showerror("Login Failed", "Please select a role.")
         return
 
     try:
-        conn = get_connection()
+        conn = mysql.connector.connect(
+            host="141.209.241.57",
+            user="tiruv1h",
+            password="mypass",
+            database="BIS698W1830_GRP1"
+        )
         cursor = conn.cursor()
-        query = "SELECT * FROM customer WHERE email=%s AND password=%s AND role=%s"
+        query = "SELECT * FROM details WHERE email=%s AND password=%s AND role=%s"
         cursor.execute(query, (email, password, role))
         result = cursor.fetchone()
-        conn.close()
 
         if result:
-            first_name = result[1]  # assuming 2nd column is first_name
-            messagebox.showinfo("Success", f"Welcome, {first_name}!")
-
-            # Role-based dashboard launching
-            if role == "admin":
-                subprocess.Popen(["python", "AdminDashboard.py"])
-            elif role == "customer":
-                subprocess.Popen(["python", "CustomerDashboard.py"])
-            elif role == "staff":
-                subprocess.Popen(["python", "StaffDashboard.py"])
-
-            app.destroy()
+            if role == "ADMIN":
+                open_admindashboard()
+            elif role == "CUSTOMER":
+                open_customerdashboard()
+            elif role == "STAFF":
+                open_staffdashboard()
         else:
-            messagebox.showerror("Login Failed", "Incorrect email, password, or role.")
+            messagebox.showerror("Access Denied", "You don't have access to this role or credentials are incorrect.")
 
-    except Exception as e:
-        messagebox.showerror("Database Error", str(e))
+        cursor.close()
+        conn.close()
+
+    except mysql.connector.Error as err:
+        messagebox.showerror("Database Error", f"Error: {err}")
 
 # Login Button
 ctk.CTkButton(center_frame, text="Login", text_color="#FFFFFF", width=146, height=45,
               fg_color="#7F5B6A", hover_color="grey", font=('inter', 14),
-              command=login).place(x=(951 - 146) // 2, y=395)
+              command=login).place(x=(951 - 146) // 2, y=381)
 
-# Signup Link
+# Sign Up Link
 signup_label = ctk.CTkLabel(center_frame, text="Don’t have an account? Sign Up",
                             text_color="#1E1E1E", font=('Inter', 16), cursor="hand2",
                             width=951, anchor="center", justify="center")
-signup_label.place(x=0, y=446)
+signup_label.place(x=0, y=436)
 signup_label.bind("<Button-1>", lambda e: open_signup())
 
-# Start App
 app.mainloop()

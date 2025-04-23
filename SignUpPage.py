@@ -23,14 +23,13 @@ def is_valid_email(email):
 # Password validation
 def is_valid_password(password):
     pattern = (
-        r'^(?=.*[a-z])'        # at least one lowercase letter
-        r'(?=.*[A-Z])'         # at least one uppercase letter
-        r'(?=.*\d)'            # at least one digit
-        r'(?=.*[@$!%*?&])'     # at least one special character
-        r'[A-Za-z\d@$!%*?&]{8,}$'  # min length 8
+        r'^(?=.*[a-z])'
+        r'(?=.*[A-Z])'
+        r'(?=.*\d)'
+        r'(?=.*[@$!%*?&])'
+        r'[A-Za-z\d@$!%*?&]{8,}$'
     )
     return re.match(pattern, password) is not None
-
 
 # App setup
 root = ctk.CTk()
@@ -38,7 +37,7 @@ root.title("SignUp Screen")
 root.geometry("1111x851")
 root.resizable(False, False)
 
-def open_login():
+def open_trial():
     subprocess.Popen(["python", "LoginPage.py"])
     root.destroy()
 
@@ -67,74 +66,51 @@ inner_left_frame.place(x=(frame_width - inner_frame_width) // 2, y=(frame_height
 ctk.CTkLabel(inner_left_frame, text="Sign Up", text_color='#000000', font=('Arya', 32, 'bold')).place(x=(inner_frame_width - 150)//2, y=40)
 
 # First Name
-ctk.CTkLabel(inner_left_frame, text="First Name", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=110)
+ctk.CTkLabel(inner_left_frame, text="First Name", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=90)
 first_name_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE")
-first_name_entry.place(x=center_x, y=140)
+first_name_entry.place(x=center_x, y=120)
 
 # Last Name
-ctk.CTkLabel(inner_left_frame, text="Last Name", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=190)
+ctk.CTkLabel(inner_left_frame, text="Last Name", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=170)
 last_name_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE")
-last_name_entry.place(x=center_x, y=220)
+last_name_entry.place(x=center_x, y=200)
 
 # Email
-ctk.CTkLabel(inner_left_frame, text="Email", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=270)
+ctk.CTkLabel(inner_left_frame, text="Email", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=250)
 email_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE")
-email_entry.place(x=center_x, y=300)
+email_entry.place(x=center_x, y=280)
 
 # Password
-ctk.CTkLabel(inner_left_frame, text="Password", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=350)
+ctk.CTkLabel(inner_left_frame, text="Password", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=330)
 password_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE", show="*")
-password_entry.place(x=center_x, y=380)
+password_entry.place(x=center_x, y=360)
 
-# Role
-ctk.CTkLabel(inner_left_frame, text="Role", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=430)
+# Confirm Password
+ctk.CTkLabel(inner_left_frame, text="Confirm Password", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=center_x, y=410)
+confirm_password_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE", show="*")
+confirm_password_entry.place(x=center_x, y=440)
 
-selected_role = ctk.StringVar(value="Select a Role")
+# Password Visibility Toggle
+def password_visibility():
+    show = "" if show_password.get() else "*"
+    password_entry.configure(show=show)
+    confirm_password_entry.configure(show=show)
 
-def update_role_text(*args):
-    role_text = selected_role.get()
-    space_padding = 43
-    role_btn.configure(text=f"{role_text}{' ' * space_padding}▼")
+show_password = ctk.BooleanVar()
+ctk.CTkCheckBox(inner_left_frame, text="Show Password", variable=show_password,
+                command=password_visibility, font=('inter', 12),
+                text_color="#3F5861", checkbox_width=18, checkbox_height=18).place(x=center_x + 100, y=480)
 
-selected_role.trace_add("write", update_role_text)
-
-def toggle_dropdown():
-    if hasattr(root, 'dropdown_window') and root.dropdown_window.winfo_exists():
-        root.dropdown_window.destroy()
-    else:
-        root.dropdown_window = ctk.CTkToplevel(root)
-        root.dropdown_window.geometry(f"{field_width}x135+{root.winfo_x() + center_x + 80}+{root.winfo_y() + 570}")
-        root.dropdown_window.overrideredirect(True)
-        root.dropdown_window.attributes('-topmost', True)
-
-        def select(role):
-            selected_role.set(role)
-            root.dropdown_window.destroy()
-
-        for role in ["ADMIN", "CUSTOMER", "STAFF"]:
-            ctk.CTkButton(root.dropdown_window, text=role, width=field_width, height=45,
-                          font=('inter', 13), fg_color="#F3F3F3", text_color="#000000",
-                          hover_color="#D6D6D6", command=lambda r=role: select(r)).pack()
-
-role_btn = ctk.CTkButton(inner_left_frame, text="Select a Role" + " " * 43 + "▼",
-                         text_color="#FFFFFF", fg_color="#7F5B6A", hover_color="#915E77",
-                         font=("inter", 13), width=field_width, height=43,
-                         command=toggle_dropdown, anchor="w", corner_radius=6)
-role_btn.place(x=center_x, y=460)
-
-# --- Signup Function ---
+# Signup Function
 def signup():
     first_name = first_name_entry.get().strip()
     last_name = last_name_entry.get().strip()
     email = email_entry.get().strip()
     password = password_entry.get().strip()
-    role = selected_role.get().lower()
+    confirm_password = confirm_password_entry.get().strip()
+    role = "customer"  # Fixed
 
-    if role not in ["admin", "customer", "staff"]:
-        messagebox.showerror("Error", "Please select a valid role.")
-        return
-
-    if not all([first_name, last_name, email, password]):
+    if not all([first_name, last_name, email, password, confirm_password]):
         messagebox.showerror("Error", "All fields are required. Please fill them in.")
         return
 
@@ -153,36 +129,22 @@ def signup():
         )
         return
 
-    if role == "admin":
-        table = "admin"
-    elif role == "staff":
-        table = "staff"
-    else:
-        table = "customer"
+    if password != confirm_password:
+        messagebox.showerror("Password Mismatch", "Passwords do not match. Please re-enter them.")
+        return
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        query = f"""
-                INSERT INTO {table} (first_name, last_name, email, password, role)
-                VALUES (%s, %s, %s, %s, %s)
-            """
+        query = """
+            INSERT INTO details (first_name, last_name, email, password, role)
+            VALUES (%s, %s, %s, %s, %s)
+        """
         cursor.execute(query, (first_name, last_name, email, password, role))
         conn.commit()
         conn.close()
-        messagebox.showinfo("Success", f"{role.title()} signed up successfully!")
-        open_login()
-    # try:
-    #     conn = get_connection()
-    #     cursor = conn.cursor()
-    #     query = """
-    #         INSERT INTO customer (first_name, last_name, email, password, role)
-    #         VALUES (%s, %s, %s, %s, %s)
-    #     """
-    #     cursor.execute(query, (first_name, last_name, email, password, role))
-    #     conn.commit()
-    #     conn.close()
-    #     messagebox.showinfo("Success", f"{role.title()} signed up successfully!")
-    #     open_login()
+        messagebox.showinfo("Success", "Customer signed up successfully!")
+        open_trial()
 
     except mysql.connector.IntegrityError:
         messagebox.showerror("Signup Error", "Email already exists. Try logging in.")
@@ -191,14 +153,14 @@ def signup():
 
 # Signup Button
 ctk.CTkButton(inner_left_frame, text="SignUp", text_color="#FFFFFF", width=button_width, height=35,
-              fg_color="#7F5B6A", hover_color="grey", font=('inter', 14), command=signup).place(x=(inner_frame_width - button_width)//2, y=510)
+              fg_color="#7F5B6A", hover_color="grey", font=('inter', 14), command=signup).place(x=(inner_frame_width - button_width)//2, y=530)
 
 # Login Redirect
 login_redirect = ctk.CTkLabel(inner_left_frame, text="Already have an account? Click here to log in",
                               text_color='#1E1E1E', font=('Inter', 14), cursor="hand2",
                               width=inner_frame_width, anchor="center", justify="center")
-login_redirect.place(x=0, y=550)
-login_redirect.bind("<Button-1>", lambda e: open_login())
+login_redirect.place(x=0, y=580)
+login_redirect.bind("<Button-1>", lambda e: open_trial())
 
 # Image on Right Side
 image_path = "images/signup.png"
@@ -208,7 +170,7 @@ ctk_image = ctk.CTkImage(light_image=image, dark_image=image, size=(450, 450))
 image_label = ctk.CTkLabel(right_login_frame, image=ctk_image, text="")
 image_label.place(x=(frame_width - 450)//2, y=(frame_height - 450)//2)
 
-# Load and place the home icon at top-left corner
+# Home Button
 home_icon = Image.open("icons/home.png").resize((35, 35))
 home_ctk_image = ctk.CTkImage(light_image=home_icon, dark_image=home_icon, size=(35, 35))
 
@@ -221,5 +183,4 @@ home_btn = ctk.CTkButton(root, text="", image=home_ctk_image, width=35, height=3
                          command=go_home)
 home_btn.place(x=15, y=15)
 
-# Start app
 root.mainloop()
