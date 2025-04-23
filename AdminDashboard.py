@@ -1,87 +1,123 @@
 import customtkinter as ctk
+import tkinter as tk
+from tkinter import messagebox, filedialog
+import mysql.connector
+import pandas as pd
 from PIL import Image
 import subprocess
-import mysql.connector
+import os
 
-# App setup
-app = ctk.CTk(fg_color="#7F5B6A")
-app.title("Staff Dashboard")
-app.geometry("1111x750")
-app.resizable(False, False)
+# App config
+ctk.set_appearance_mode("light")
+admin_dashboard = ctk.CTk()
+admin_dashboard.geometry("1111x750")
+admin_dashboard.title("Admin Dashboard")
+admin_dashboard.configure(fg_color="#7F5B6A")
 
-def go_home():
-    subprocess.Popen(["python", "HomePage.py"])
-    app.destroy()
+# Top Frame
+top_frame = ctk.CTkFrame(admin_dashboard, height=60, fg_color="#D9D9D9", corner_radius=0)
+top_frame.pack(fill="x")
+title_label = ctk.CTkLabel(top_frame, text="ADMIN DASHBOARD", font=("Arial", 18, "bold"), text_color="black")
+title_label.place(relx=0.03, rely=0.5, anchor="w")
 
-# ✅ Correct Image Resize Function using CTkImage
+# Image utility
 def resize_image(size, image_url):
-    """Returns a CTkImage resized to the given size"""
     image = Image.open(image_url)
     return ctk.CTkImage(light_image=image, size=size)
 
-# Top Frame
-top_frame = ctk.CTkFrame(app, width=1111, height=81, fg_color="#D9D9D9", corner_radius=0)
-top_frame.place(x=0, y=0)
-
-# Tooltip Label (appears below the door icon)
-tooltip_label = ctk.CTkLabel(app, text="Logout", text_color="#000000", fg_color="#FFFFFF",
-                             font=("Segoe UI", 10), corner_radius=4, width=60, height=20)
-tooltip_label.place_forget()  # Hide initially
-
-def show_tooltip(event):
-    # Tooltip appears just below the door icon
-    tooltip_label.place(x=1010, y=65)
-
-def hide_tooltip(event):
-    tooltip_label.place_forget()
+# Navigation
+def go_home():
+    subprocess.Popen(["python", "HomePage.py"])
+    admin_dashboard.destroy()
 
 def open_current_event():
     subprocess.Popen(["python", "CurrentEvent.py"])
-    app.destroy()
+    admin_dashboard.destroy()
 
-# Door Icon (logout) as CTkLabel to allow hover
-door_icon = resize_image((55, 55), "icons/door.png")
-door_label = ctk.CTkLabel(top_frame, text="", image=door_icon, fg_color="#D9D9D9", cursor="hand2")
-door_label.place(x=1010, y=5)
-door_label.bind("<Enter>", show_tooltip)
-door_label.bind("<Leave>", hide_tooltip)
-door_label.bind("<Button-1>", lambda e: go_home())
+def open_staff_allocation():
+    subprocess.Popen(["python", "StaffAllocation.py"])
+    admin_dashboard.destroy()
 
-# Dashboard Title
-dash_label = ctk.CTkLabel(top_frame, text="ADMIN DASHBOARD", text_color="#000000", font=('inter', 40))
-dash_label.place(x=20, y=17)
+# Back and Logout Icons
+logout_icon = resize_image((35, 35), "icons/door.png")
+logout_label = ctk.CTkLabel(top_frame, text="", image=logout_icon, cursor="hand2")
+logout_label.place(x=1060, y=10)
+logout_label.bind("<Button-1>", lambda e: go_home())
 
-# Frame 1: Create Events
-#frame1 = ctk.CTkFrame(app, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
-#frame1.place(x=80, y=120)
-
-#event_icon = resize_image((95, 95), "icons/Create Events.png")
-#event_btn = ctk.CTkButton(frame1, text="", image=event_icon, fg_color="#D9D9D9", width=95, height=95)
-#event_btn.place(x=95, y=30)
-
-#event_label = ctk.CTkLabel(frame1, text="Create Events", text_color="#000000", font=('inter', 24))
-#event_label.place(x=70, y=180)
-
-# Frame 2: Current Events
-frame2 = ctk.CTkFrame(app, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
-frame2.place(x=80, y=120)
-
+# Dashboard Grid
+frame1 = ctk.CTkFrame(admin_dashboard, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
+frame1.place(x=80, y=120)
 cevent_icon = resize_image((95, 95), "icons/Current Events.png")
-cevent_btn = ctk.CTkButton(frame2, text="", image=cevent_icon, fg_color="#D9D9D9", width=95, height=95, command=open_current_event)
+cevent_btn = ctk.CTkButton(frame1, text="", image=cevent_icon, fg_color="#D9D9D9", width=95, height=95, command=open_current_event)
 cevent_btn.place(x=95, y=30)
-
-cevent_label = ctk.CTkLabel(frame2, text="Current Events", text_color="#000000", font=('inter', 24))
+cevent_label = ctk.CTkLabel(frame1, text="Current Events", text_color="#000000", font=('inter', 24))
 cevent_label.place(x=70, y=180)
 
-# Frame 3: Staff Allocation
-frame3 = ctk.CTkFrame(app, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
-frame3.place(x=400, y=120)
-
+frame2 = ctk.CTkFrame(admin_dashboard, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
+frame2.place(x=400, y=120)
 staff_icon = resize_image((95, 95), "icons/Staff Allocation.png")
-staff_btn = ctk.CTkButton(frame3, text="", image=staff_icon, fg_color="#D9D9D9", width=95, height=95)
+staff_btn = ctk.CTkButton(frame2, text="", image=staff_icon, fg_color="#D9D9D9", width=95, height=95, command=open_staff_allocation)
 staff_btn.place(x=95, y=30)
-
-staff_label = ctk.CTkLabel(frame3, text="Staff Allocation", text_color="#000000", font=('inter', 24))
+staff_label = ctk.CTkLabel(frame2, text="Staff Allocation", text_color="#000000", font=('inter', 24))
 staff_label.place(x=55, y=180)
 
-app.mainloop()
+# Fetch events
+def fetch_events():
+    try:
+        conn = mysql.connector.connect(
+            host="141.209.241.57",
+            user="tiruv1h",
+            password="mypass",
+            database="BIS698W1830_GRP1"
+        )
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM events")
+        events = cursor.fetchall()
+        conn.close()
+        return events
+    except Exception as e:
+        messagebox.showerror("Database Error", str(e))
+        return []
+
+# Generate Report Function
+def generate_report():
+    events = fetch_events()
+    if not events:
+        messagebox.showwarning("No Events", "No event data available.")
+        return
+
+    df = pd.DataFrame(events)
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    upcoming = df[df['date'] >= pd.Timestamp.now()].shape[0]
+    total_events = df.shape[0]
+    statuses = df['status'].value_counts().to_dict() if 'status' in df.columns else {}
+
+    summary_data = {
+        "Metric": ["Total Events", "Upcoming Events"] + list(statuses.keys()),
+        "Value": [total_events, upcoming] + list(statuses.values())
+    }
+    summary_df = pd.DataFrame(summary_data)
+
+    base_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+    if not base_path:
+        return
+
+    # Ensure unique filename if exists
+    counter = 1
+    final_path = base_path
+    while os.path.exists(final_path):
+        name, ext = os.path.splitext(base_path)
+        final_path = f"{name}_{counter}{ext}"
+        counter += 1
+
+    with pd.ExcelWriter(final_path, engine="openpyxl") as writer:
+        summary_df.to_excel(writer, sheet_name="Summary Report", index=False)
+        df.to_excel(writer, sheet_name="All Events Data", index=False)
+
+    messagebox.showinfo("Success", f"Report saved to:\n{final_path}")
+
+# Generate Button
+generate_button = ctk.CTkButton(admin_dashboard, text="📥 Generate Reports", command=generate_report)
+generate_button.place(x=950, y=90)
+
+admin_dashboard.mainloop()

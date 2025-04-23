@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import tkinter as tk
+from tkinter import simpledialog
 from PIL import Image
 import mysql.connector
 from datetime import datetime
@@ -61,7 +62,6 @@ def fetch_events():
         cursor.execute("SELECT * FROM events")
         data = cursor.fetchall()
         conn.close()
-        # Sort by upcoming dates
         return sorted(data, key=lambda x: datetime.strptime(x['date'], "%m/%d/%Y"))
     except Exception as e:
         print("Error:", e)
@@ -83,6 +83,25 @@ def delete_event(event_id):
         load_events()
     except Exception as e:
         print("Delete Error:", e)
+
+# Update event status
+def update_status(event_id):
+    new_status = simpledialog.askstring("Update Status", "Enter new status (e.g. Planning in Process, Vendors Booked, Event Day):")
+    if new_status:
+        try:
+            conn = mysql.connector.connect(
+                host="141.209.241.57",
+                user="tiruv1h",
+                password="mypass",
+                database="BIS698W1830_GRP1"
+            )
+            cursor = conn.cursor()
+            cursor.execute("UPDATE events SET status = %s WHERE id = %s", (new_status, event_id))
+            conn.commit()
+            conn.close()
+            load_events()
+        except Exception as e:
+            print("Status Update Error:", e)
 
 # UI Containers
 search_var = tk.StringVar()
@@ -119,13 +138,14 @@ def create_event_card(event):
     location = tk.Label(container, text=f"📍 {event['location']}", font=("Arial", 13), bg="#ECECEC")
 
     delete_btn = tk.Button(container, text="Delete", bg="#e74c3c", fg="white", command=lambda: delete_event(event['id']))
-    # Optionally: edit_btn = tk.Button(container, text="Edit", bg="#3498db", fg="white")
+    update_btn = tk.Button(container, text="Update", bg="#3498db", fg="white", command=lambda: update_status(event['id']))
 
     title.grid(row=0, column=0, sticky="w", padx=10)
     countdown.grid(row=0, column=1, sticky="e", padx=10)
     details.grid(row=1, column=0, sticky="w", padx=10, pady=(5, 0))
     location.grid(row=2, column=0, sticky="w", padx=10)
-    delete_btn.grid(row=1, column=1, rowspan=2, sticky="e", padx=10)
+    delete_btn.grid(row=1, column=1, sticky="e", padx=5)
+    update_btn.grid(row=2, column=1, sticky="e", padx=5)
 
     event_cards.append(container)
 

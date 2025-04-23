@@ -46,14 +46,14 @@ field_width = 351
 
 # Email
 ctk.CTkLabel(center_frame, text="Email", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=35)
-email_entry = ctk.CTkEntry(center_frame, text_color="#D1D1D1", font=('inter', 12),
+email_entry = ctk.CTkEntry(center_frame, text_color="black", font=('inter', 12),
                            width=field_width, height=47, border_width=1, fg_color="#FEFEFE")
 email_entry.place(x=field_x, y=69)
 
 # Password
 ctk.CTkLabel(center_frame, text="Password", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=146)
 password_var = ctk.StringVar()
-password_entry = ctk.CTkEntry(center_frame, text_color="#D1D1D1", font=('inter', 12),
+password_entry = ctk.CTkEntry(center_frame, text_color="black", font=('inter', 12),
                                width=field_width, height=47, border_width=1,
                                fg_color="#FEFEFE", show="*", textvariable=password_var)
 password_entry.place(x=field_x, y=180)
@@ -68,7 +68,7 @@ def toggle_password_visibility():
 show_password = ctk.BooleanVar()
 ctk.CTkCheckBox(center_frame, text="Show Password", variable=show_password,
                 command=toggle_password_visibility, font=('inter', 12),
-                text_color="#3F5861", checkbox_width=18, checkbox_height=18).place(x=field_x + 180, y=230)
+                text_color="#3F5861", checkbox_width=18, checkbox_height=18).place(x=field_x + 240, y=230)
 
 # Role selection
 ctk.CTkLabel(center_frame, text="Role", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=257)
