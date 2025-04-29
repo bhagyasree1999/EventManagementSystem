@@ -4,6 +4,8 @@ from customtkinter import CTkImage
 import subprocess
 import mysql.connector
 from tkinter import messagebox
+import keyboard
+import ctypes
 
 app = ctk.CTk(fg_color="#D9D9D9")
 app.title("Event Ease Login Page")
@@ -46,17 +48,49 @@ field_width = 351
 
 # Email
 ctk.CTkLabel(center_frame, text="Email", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=35)
-email_entry = ctk.CTkEntry(center_frame, text_color="black", font=('inter', 12),
+email_entry = ctk.CTkEntry(center_frame, text_color="#D1D1D1", font=('inter', 12),
                            width=field_width, height=47, border_width=1, fg_color="#FEFEFE")
 email_entry.place(x=field_x, y=69)
 
 # Password
 ctk.CTkLabel(center_frame, text="Password", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=146)
 password_var = ctk.StringVar()
-password_entry = ctk.CTkEntry(center_frame, text_color="black", font=('inter', 12),
+password_entry = ctk.CTkEntry(center_frame, text_color="#D1D1D1", font=('inter', 12),
                                width=field_width, height=47, border_width=1,
                                fg_color="#FEFEFE", show="*", textvariable=password_var)
 password_entry.place(x=field_x, y=180)
+
+# CapsLock warning label
+capslock_label = ctk.CTkLabel(center_frame, text="Caps Lock is ON", text_color="red",
+                              font=('inter', 12))
+capslock_label.place(x=field_x, y=230)
+capslock_label.place_forget()  # Hide it initially
+
+monitoring = False
+
+# Monitor Caps Lock when in Password field
+def monitor_capslock():
+    if monitoring:
+        capslock_on = bool(ctypes.WinDLL("User32.dll").GetKeyState(0x14))
+        if capslock_on:
+            capslock_label.place(x=field_x, y=230)
+        else:
+            capslock_label.place_forget()
+        app.after(200, monitor_capslock)
+
+def start_monitoring(event):
+    global monitoring
+    monitoring = True
+    monitor_capslock()
+
+def stop_monitoring(event):
+    global monitoring
+    monitoring = False
+    capslock_label.place_forget()
+
+# Bind Password Entry
+password_entry.bind("<FocusIn>", start_monitoring)
+password_entry.bind("<FocusOut>", stop_monitoring)
 
 # Toggle Password Visibility
 def toggle_password_visibility():
@@ -127,7 +161,7 @@ def login():
     try:
         conn = mysql.connector.connect(
             host="141.209.241.57",
-            user="tiruv1h",
+            user="surak1m",
             password="mypass",
             database="BIS698W1830_GRP1"
         )

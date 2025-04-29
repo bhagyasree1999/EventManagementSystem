@@ -5,6 +5,7 @@ import subprocess
 import mysql.connector
 from tkinter import messagebox
 import re
+import ctypes
 
 # MySQL connection function
 def get_connection():
@@ -38,7 +39,7 @@ root.geometry("1111x851")
 root.resizable(False, False)
 
 def open_trial():
-    subprocess.Popen(["python", "LoginPage.py"])
+    subprocess.Popen(["python", "Trial.py"])
     root.destroy()
 
 # Layout dimensions
@@ -90,7 +91,40 @@ ctk.CTkLabel(inner_left_frame, text="Confirm Password", text_color="#3F5861", fo
 confirm_password_entry = ctk.CTkEntry(inner_left_frame, text_color="#000000", font=('inter', 12), width=field_width, height=35, fg_color="#FEFEFE", show="*")
 confirm_password_entry.place(x=center_x, y=440)
 
-# Password Visibility Toggle
+# CapsLock warning label
+capslock_label = ctk.CTkLabel(inner_left_frame, text="Caps Lock is ON", text_color="red",
+                              font=('inter', 12))
+capslock_label.place(x=center_x, y=480)
+capslock_label.place_forget()
+
+monitoring = False
+
+def monitor_capslock():
+    if monitoring:
+        capslock_on = bool(ctypes.WinDLL("User32.dll").GetKeyState(0x14))
+        if capslock_on:
+            capslock_label.place(x=center_x, y=480)
+        else:
+            capslock_label.place_forget()
+        root.after(200, monitor_capslock)
+
+def start_monitoring(event):
+    global monitoring
+    monitoring = True
+    monitor_capslock()
+
+def stop_monitoring(event):
+    global monitoring
+    monitoring = False
+    capslock_label.place_forget()
+
+# Bind Password & Confirm Password fields to monitor CapsLock
+password_entry.bind("<FocusIn>", start_monitoring)
+password_entry.bind("<FocusOut>", stop_monitoring)
+confirm_password_entry.bind("<FocusIn>", start_monitoring)
+confirm_password_entry.bind("<FocusOut>", stop_monitoring)
+
+# Password Visibility
 def password_visibility():
     show = "" if show_password.get() else "*"
     password_entry.configure(show=show)
