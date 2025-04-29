@@ -69,6 +69,10 @@ form_frame.pack(pady=40, padx=60, fill="both", expand=True)
 # DB Insert Function
 def insert_event(event_name, location, date, time, duration, description):
     try:
+        # ✅ Read email from file (make sure this file exists by logging in first)
+        with open("user_email.txt", "r") as f:
+            customer_email = f.read().strip()
+
         conn = mysql.connector.connect(
             host="141.209.241.57",
             user="tiruv1h",
@@ -77,13 +81,18 @@ def insert_event(event_name, location, date, time, duration, description):
         )
         cursor = conn.cursor()
         query = """
-            INSERT INTO events (event_name, location, date, time, duration, description)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO events (event_name, location, date, time, duration, description, email)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (event_name, location, date, time, duration, description))
+        cursor.execute(query, (event_name, location, date, time, duration, description, customer_email))
         conn.commit()
         conn.close()
         return True
+
+    except FileNotFoundError:
+        messagebox.showerror("Login Required", "Please login again before creating an event.")
+        return False
+
     except Exception as e:
         messagebox.showerror("Database Error", str(e))
         return False

@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import mysql.connector
 from PIL import Image
 import subprocess
 
@@ -48,7 +49,9 @@ door_label.bind("<Enter>", show_tooltip)
 door_label.bind("<Leave>", hide_tooltip)
 door_label.bind("<Button-1>", lambda e: go_home())
 
-dash_label = ctk.CTkLabel(top_frame, text="CUSTOMER DASHBOARD", text_color="#000000", font=('inter', 40))
+with open("user_info.txt", "r") as f:
+    user_first_name = f.read().strip()
+dash_label = ctk.CTkLabel(top_frame, text=f"{user_first_name}'s Dashboard", text_color="#000000", font=('inter', 40))
 dash_label.place(x=20, y=17)
 
 # Frame 1: Create Events
