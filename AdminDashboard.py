@@ -6,6 +6,7 @@ import pandas as pd
 from PIL import Image
 import subprocess
 import os
+from datetime import datetime
 
 # App config
 ctk.set_appearance_mode("light")
@@ -79,7 +80,7 @@ def fetch_events():
         messagebox.showerror("Database Error", str(e))
         return []
 
-# Generate Report Function
+# Generate Report Function with timestamped filename
 def generate_report():
     events = fetch_events()
     if not events:
@@ -87,8 +88,16 @@ def generate_report():
         return
 
     df = pd.DataFrame(events)
+
+    # Convert and format date
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
-    upcoming = df[df['date'] >= pd.Timestamp.now()].shape[0]
+    df['date'] = df['date'].dt.strftime('%d %B %Y')  # Format: 30 April 2025
+
+    # Drop 'id' column
+    if 'id' in df.columns:
+        df.drop(columns=['id'], inplace=True)
+
+    upcoming = df[df['date'] >= datetime.now().strftime('%d %B %Y')].shape[0]
     total_events = df.shape[0]
     statuses = df['status'].value_counts().to_dict() if 'status' in df.columns else {}
 
@@ -98,23 +107,24 @@ def generate_report():
     }
     summary_df = pd.DataFrame(summary_data)
 
-    base_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+    # Filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    default_filename = f"Admin_Event_Report_{timestamp}.xlsx"
+
+    base_path = filedialog.asksaveasfilename(
+        defaultextension=".xlsx",
+        initialfile=default_filename,
+        filetypes=[("Excel files", "*.xlsx")]
+    )
     if not base_path:
         return
 
-    # Ensure unique filename if exists
-    counter = 1
-    final_path = base_path
-    while os.path.exists(final_path):
-        name, ext = os.path.splitext(base_path)
-        final_path = f"{name}_{counter}{ext}"
-        counter += 1
-
-    with pd.ExcelWriter(final_path, engine="openpyxl") as writer:
+    with pd.ExcelWriter(base_path, engine="openpyxl") as writer:
         summary_df.to_excel(writer, sheet_name="Summary Report", index=False)
         df.to_excel(writer, sheet_name="All Events Data", index=False)
 
-    messagebox.showinfo("Success", f"Report saved to:\n{final_path}")
+    messagebox.showinfo("Success", f"Report saved to:\n{base_path}")
+
 
 # Generate Button
 generate_button = ctk.CTkButton(admin_dashboard, text="📥 Generate Reports", command=generate_report)
