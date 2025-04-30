@@ -161,7 +161,7 @@ def login():
     try:
         conn = mysql.connector.connect(
             host="141.209.241.57",
-            user="surak1m",
+            user="tiruv1h",
             password="mypass",
             database="BIS698W1830_GRP1"
         )
@@ -174,10 +174,12 @@ def login():
             if role == "ADMIN":
                 open_admindashboard()
             elif role == "CUSTOMER":
-                with open("user_info.txt", "w") as f:
-                    f.write(result[1])
-                    with open("user_email.txt", "w") as f:
-                        f.write(result[3])
+                with open("user_info.txt", "w") as f1:
+                    f1.write(result[1])
+
+                with open("user_email.txt", "w") as f2:
+                    f2.write(email)
+
                 open_customerdashboard()
             elif role == "STAFF":
                 open_staffdashboard()

@@ -67,11 +67,18 @@ form_frame = ctk.CTkFrame(app, fg_color="#7F5B6A")
 form_frame.pack(pady=40, padx=60, fill="both", expand=True)
 
 # DB Insert Function
-def insert_event(event_name, location, date, time, duration, description):
+def insert_event(event_name, location, date, time, duration, description, customer_email):
     try:
-        # ✅ Read email from file (make sure this file exists by logging in first)
-        with open("user_email.txt", "r") as f:
-            customer_email = f.read().strip()
+        # Read email from file
+        # with open("user_email.txt", "r") as f:
+        #     customer_email = f.read().strip()
+        # print("[DEBUG] Email to insert into DB:", customer_email)
+        # print(type(customer_email))
+        #
+        # if not customer_email or customer_email == "unknown@example.com":
+        #     raise Exception("Invalid email in user_email.txt")
+        #
+        # print("[DEBUG] Email to insert into DB:", customer_email)
 
         conn = mysql.connector.connect(
             host="141.209.241.57",
@@ -80,18 +87,19 @@ def insert_event(event_name, location, date, time, duration, description):
             database="BIS698W1830_GRP1"
         )
         cursor = conn.cursor()
+
         query = """
             INSERT INTO events (event_name, location, date, time, duration, description, email)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (event_name, location, date, time, duration, description, customer_email))
+        cursor.execute(query, (event_name, location, date, time, duration, description, customer_email,))
         conn.commit()
         conn.close()
         return True
 
-    except FileNotFoundError:
-        messagebox.showerror("Login Required", "Please login again before creating an event.")
-        return False
+    # except FileNotFoundError:
+    #     messagebox.showerror("Login Required", "Please login again before creating an event.")
+    #     return False
 
     except Exception as e:
         messagebox.showerror("Database Error", str(e))
@@ -149,12 +157,29 @@ def show_confirmation():
     time_ = time_entry.get()
     duration = duration_entry.get()
     desc = description_entry.get()
-
+    print(type(desc));
     if not all([event, loc, date, time_, duration, desc]):
         messagebox.showwarning("Missing Fields", "Please fill out all fields before submitting.")
         return
+    try:
+        # Read email from file
+        with open("user_email.txt", "r") as f:
+            customer_email = f.read().strip()
+        print("[DEBUG] Email to insert into DB:", customer_email)
+        print(type(customer_email))
 
-    success = insert_event(event, loc, date, time_, duration, desc)
+        # if not customer_email or customer_email == "unknown@example.com":
+        #     raise Exception("Invalid email in user_email.txt")
+
+        print("[DEBUG] Email to insert into DB:", customer_email)
+    except FileNotFoundError:
+        messagebox.showerror("Login Required", "Please login again before creating an event.")
+        return False
+
+    except Exception as e:
+        messagebox.showerror("Database Error", str(e))
+        return False
+    success = insert_event(event, loc, date, time_, duration, desc, customer_email)
 
     if success:
         popup = ctk.CTkToplevel(app)
@@ -164,10 +189,14 @@ def show_confirmation():
         popup.configure(fg_color="#FFFFFF")
 
         # Center popup on screen
-        popup.update_idletasks()
-        x = app.winfo_x() + (app.winfo_width() // 2) - (350 // 2)
-        y = app.winfo_y() + (app.winfo_height() // 2) - (150 // 2)
-        popup.geometry(f"+{x}+{y}")
+        try:
+            popup.update_idletasks()
+            x = app.winfo_rootx() + (app.winfo_width() // 2) - (350 // 2)
+            y = app.winfo_rooty() + (app.winfo_height() // 2) - (150 // 2)
+            popup.geometry(f"+{x}+{y}")
+        except Exception as e:
+            print("[WARN] Centering popup failed:", e)
+            popup.geometry("350x150+500+300")  # fallback to fixed position
 
         # Confirmation message
         success_label = ctk.CTkLabel(

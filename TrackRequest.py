@@ -18,7 +18,7 @@ top_frame.pack(fill="x")
 title_label = ctk.CTkLabel(top_frame, text="TRACK REQUESTS", font=("Arial", 22, "bold"), text_color="black")
 title_label.place(relx=0.06, rely=0.5, anchor="w")
 
-# Home button icon
+# Home and Back Buttons
 def resize_image(size, image_url):
     image = Image.open(image_url)
     return ctk.CTkImage(light_image=image, size=size)
@@ -27,18 +27,15 @@ def go_home():
     subprocess.Popen(["python", "HomePage.py"])
     track_app.destroy()
 
-# Go Back
 def go_back():
     subprocess.Popen(["python", "CustomerDashboard.py"])
     track_app.destroy()
 
-# Tooltip Label (appears below the door icon)
 tooltip_label = ctk.CTkLabel(track_app, text="Logout", text_color="#000000", fg_color="#FFFFFF",
                              font=("Segoe UI", 10), corner_radius=4, width=60, height=20)
-tooltip_label.place_forget()  # Hide initially
+tooltip_label.place_forget()
 
 def show_tooltip(event):
-    # Tooltip appears just below the door icon
     tooltip_label.place(x=1010, y=65)
 
 def hide_tooltip(event):
@@ -49,17 +46,32 @@ home_label = ctk.CTkLabel(top_frame, text="", image=home_icon, fg_color="#D9D9D9
 home_label.place(x=1010, y=5)
 home_label.bind("<Button-1>", lambda e: go_home())
 
-# Back Icon
 back_icon = resize_image((40, 40), "icons/backarrow.png")
 back_label = ctk.CTkLabel(top_frame, text="", image=back_icon, fg_color="#D9D9D9", cursor="hand2")
 back_label.place(x=20, y=20)
 back_label.bind("<Button-1>", lambda e: go_back())
 
-# Track Frame
+# Main Track Frame
 track_frame = ctk.CTkFrame(track_app, fg_color="#F5F5F5", width=450, height=520, corner_radius=12)
 track_frame.place(relx=0.5, rely=0.55, anchor="center")
 
-# Fetch event status from database
+# Read logged-in customer email
+try:
+
+    with open("user_email.txt", "r") as f:
+        customer_email = f.read().strip().replace('\n', '').replace('\r', '')
+    #print(f"[DEBUG] Loaded email: '{customer_email}'")
+except FileNotFoundError:
+    messagebox.showerror("Error", "User email file not found.")
+    track_app.destroy()
+    exit()
+
+# Dropdown and ID Mapping
+event_display_map = {}  # maps "Birthday Party (2025-05-12)" → event_id
+event_dropdown = ctk.CTkComboBox(track_frame, width=250, values=[], command=lambda _: show_status())
+event_dropdown.pack(pady=(25, 10))
+
+# Fetch event status
 def get_event_status(event_id):
     try:
         conn = mysql.connector.connect(
@@ -69,7 +81,7 @@ def get_event_status(event_id):
             database="BIS698W1830_GRP1"
         )
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT event_name, location, date, status FROM events WHERE id = %s", (event_id,))
+        cursor.execute("SELECT event_name, location, date, status FROM events WHERE id = %s", (customer_email,))
         result = cursor.fetchone()
         conn.close()
         return result
@@ -77,6 +89,7 @@ def get_event_status(event_id):
         messagebox.showerror("Database Error", str(e))
         return None
 
+# Show selected event status
 status_labels = []
 
 def show_status():
@@ -84,12 +97,15 @@ def show_status():
         lbl.destroy()
     status_labels.clear()
 
-    event_id = event_id_entry.get()
+    selected = event_dropdown.get()
+    if not selected or selected not in event_display_map:
+        return
+
+    event_id = event_display_map[selected]
     data = get_event_status(event_id)
     if not data:
         return
 
-    # Event Info Card
     card_frame = ctk.CTkFrame(track_frame, fg_color="white", width=400, corner_radius=8)
     card_frame.pack(pady=10)
 
@@ -101,7 +117,6 @@ def show_status():
     date.pack(pady=(0, 10))
     status_labels.extend([card_frame, name, loc, date])
 
-    # Status
     steps = ["Booking Confirmed", "Planning in Process", "Vendors Booked", "Event Day"]
     current_status = data['status']
     status_index = steps.index(current_status) if current_status in steps else -1
@@ -113,13 +128,39 @@ def show_status():
         lbl.pack(anchor="w", padx=50, pady=2)
         status_labels.append(lbl)
 
-# Input for Event ID
-event_id_label = ctk.CTkLabel(track_frame, text="Enter Event ID", font=("Arial", 14), text_color="black")
-event_id_label.pack(pady=(25, 5))
-event_id_entry = ctk.CTkEntry(track_frame, width=250, height=35)
-event_id_entry.pack()
+# Load dropdown values
+def load_customer_events():
+    global event_display_map
+    try:
+        conn = mysql.connector.connect(
+            host="141.209.241.57",
+            user="tiruv1h",
+            password="mypass",
+            database="BIS698W1830_GRP1"
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, event_name, date FROM events WHERE email = %s ORDER BY date DESC", (customer_email,))
+        events = cursor.fetchall()
+        conn.close()
 
-view_button = ctk.CTkButton(track_frame, text="Track Event", width=120, command=show_status)
-view_button.pack(pady=(15, 10))
+#        print("[DEBUG] Events fetched:", events)
 
+        options = []
+        event_display_map = {}
+
+        for eid, name, date in events:
+            display_text = f"{name} ({date})"
+            options.append(display_text)
+            event_display_map[display_text] = eid
+
+        event_dropdown.configure(values=options)
+        if options:
+            event_dropdown.set(options[0])
+        else:
+            messagebox.showinfo("No Events", "No events found for this customer.")
+    except Exception as e:
+        messagebox.showerror("Database Error", str(e))
+
+# Run the loader
+load_customer_events()
 track_app.mainloop()
