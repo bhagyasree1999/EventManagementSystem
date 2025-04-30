@@ -81,7 +81,7 @@ def get_event_status(event_id):
             database="BIS698W1830_GRP1"
         )
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT event_name, location, date, status FROM events WHERE id = %s", (customer_email,))
+        cursor.execute("SELECT event_name, location, date, status FROM events WHERE id = %s", (event_id,))
         result = cursor.fetchone()
         conn.close()
         return result
