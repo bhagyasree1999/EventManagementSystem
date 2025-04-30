@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from customtkinter import CTkImage
 from PIL import Image
+import subprocess
 
 app = ctk.CTk(fg_color="#7F5B6A")
 app.title("Staff Dashboard")
@@ -11,6 +12,19 @@ def resize_image(size, image_url):
     """Load and resize image using CTkImage"""
     original_image = Image.open(image_url)
     return CTkImage(light_image=original_image, size=size)
+
+def go_home():
+    subprocess.Popen("python","Homepage.py")
+    app.destroy()
+
+def open_contactmanager():
+    subprocess.Popen(["python", "ContactManager.py"])
+    app.destroy()
+
+def open_upcomingevents():
+    subprocess.Popen(["python", "UpcomingEvents.py"])
+    app.destroy()
+
 
 # Top Frame
 top_frame = ctk.CTkFrame(app, width=1111, height=81, fg_color="#D9D9D9", corner_radius=0)
@@ -26,6 +40,8 @@ def show_tooltip(event):
 
 def hide_tooltip(event):
     tooltip_label.place_forget()
+
+
 
 # Door Icon (logout) as CTkLabel to allow hover
 door_icon = resize_image((55, 55), "icons/door.png")
@@ -45,7 +61,7 @@ frame1.place(x=80, y=120)
 
 # Upcoming Events Photo
 upcoming = resize_image((95, 95), "icons/UpcomingEvents.png")
-upcoming_button = ctk.CTkButton(app, text="", image=upcoming, fg_color="#EBE6E6")
+upcoming_button = ctk.CTkButton(app, text="", image=upcoming, fg_color="#D9D9D9",command=open_upcomingevents)
 upcoming_button.place(x=150, y=200)
 
 # Upcoming Events Label
@@ -58,7 +74,7 @@ frame2.place(x=400, y=120)
 
 # Contact Manager Photo
 contact = resize_image((95, 95), "icons/Contact Admin.png")
-contact_button = ctk.CTkButton(app, text="", image=contact, fg_color="#EBE6E6")
+contact_button = ctk.CTkButton(app, text="", image=contact, fg_color="#EBE6E6", command=open_contactmanager)
 contact_button.place(x=475, y=200)
 
 # Contact Manager Label
