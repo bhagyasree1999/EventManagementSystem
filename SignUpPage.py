@@ -39,7 +39,7 @@ root.geometry("1111x851")
 root.resizable(False, False)
 
 def open_trial():
-    subprocess.Popen(["python", "Trial.py"])
+    subprocess.Popen(["python", "LoginPage.py"])
     root.destroy()
 
 # Layout dimensions
