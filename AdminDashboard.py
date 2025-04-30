@@ -1,117 +1,69 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkcalendar import Calendar
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import mysql.connector
+import pandas as pd
 from PIL import Image
 import subprocess
+import os
 from datetime import datetime
 
 # App config
 ctk.set_appearance_mode("light")
-modify_app = ctk.CTk()
-modify_app.geometry("700x550")
-modify_app.title("Modify Event Details")
-modify_app.configure(fg_color="#7F5B6A")
+admin_dashboard = ctk.CTk()
+admin_dashboard.geometry("1111x750")
+admin_dashboard.title("Admin Dashboard")
+admin_dashboard.configure(fg_color="#7F5B6A")
 
 # Top Frame
-top_frame = ctk.CTkFrame(modify_app, height=81, fg_color="#D9D9D9", corner_radius=0)
+top_frame = ctk.CTkFrame(admin_dashboard, height=60, fg_color="#D9D9D9", corner_radius=0)
 top_frame.pack(fill="x")
-title_label = ctk.CTkLabel(top_frame, text="MODIFY EVENT DETAILS", font=("Arial", 22, "bold"), text_color="black")
-title_label.place(relx=0.10, rely=0.5, anchor="w")
+title_label = ctk.CTkLabel(top_frame, text="ADMIN DASHBOARD", font=("Arial", 22, "bold"), text_color="black")
+title_label.place(relx=0.03, rely=0.5, anchor="w")
 
-# Resize image utility
+# Image utility
 def resize_image(size, image_url):
     image = Image.open(image_url)
     return ctk.CTkImage(light_image=image, size=size)
 
-# Navigation functions
+# Navigation
 def go_home():
     subprocess.Popen(["python", "HomePage.py"])
-    modify_app.destroy()
+    admin_dashboard.destroy()
 
-def go_back():
-    subprocess.Popen(["python", "CustomerDashboard.py"])
-    modify_app.destroy()
+def open_current_event():
+    subprocess.Popen(["python", "CurrentEvent.py"])
+    admin_dashboard.destroy()
 
-# Tooltip Label
-tooltip_label = ctk.CTkLabel(modify_app, text="Logout", text_color="#000000", fg_color="#FFFFFF",
-                             font=("Segoe UI", 10), corner_radius=4, width=60, height=20)
-tooltip_label.place_forget()
+def open_staff_allocation():
+    subprocess.Popen(["python", "StaffAllocation.py"])
+    admin_dashboard.destroy()
 
-def show_tooltip(event):
-    tooltip_label.place(x=610, y=65)
+# Back and Logout Icons
+logout_icon = resize_image((35, 35), "icons/door.png")
+logout_label = ctk.CTkLabel(top_frame, text="", image=logout_icon, cursor="hand2")
+logout_label.place(x=1060, y=10)
+logout_label.bind("<Button-1>", lambda e: go_home())
 
-def hide_tooltip(event):
-    tooltip_label.place_forget()
+# Dashboard Grid
+frame1 = ctk.CTkFrame(admin_dashboard, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
+frame1.place(x=80, y=120)
+cevent_icon = resize_image((95, 95), "icons/Current Events.png")
+cevent_btn = ctk.CTkButton(frame1, text="", image=cevent_icon, fg_color="#D9D9D9", width=95, height=95, command=open_current_event)
+cevent_btn.place(x=95, y=30)
+cevent_label = ctk.CTkLabel(frame1, text="Current Events", text_color="#000000", font=('inter', 24))
+cevent_label.place(x=70, y=180)
 
-# Door Icon (logout)
-door_icon = resize_image((55, 55), "icons/door.png")
-door_label = ctk.CTkLabel(top_frame, text="", image=door_icon, fg_color="#D9D9D9", cursor="hand2")
-door_label.place(x=600, y=5)
-door_label.bind("<Enter>", show_tooltip)
-door_label.bind("<Leave>", hide_tooltip)
-door_label.bind("<Button-1>", lambda e: go_home())
+frame2 = ctk.CTkFrame(admin_dashboard, width=284, height=244, fg_color="#D9D9D9", corner_radius=10)
+frame2.place(x=400, y=120)
+staff_icon = resize_image((95, 95), "icons/Staff Allocation.png")
+staff_btn = ctk.CTkButton(frame2, text="", image=staff_icon, fg_color="#D9D9D9", width=95, height=95, command=open_staff_allocation)
+staff_btn.place(x=95, y=30)
+staff_label = ctk.CTkLabel(frame2, text="Staff Allocation", text_color="#000000", font=('inter', 24))
+staff_label.place(x=55, y=180)
 
-# Back Icon
-back_icon = resize_image((40, 40), "icons/backarrow.png")
-back_label = ctk.CTkLabel(top_frame, text="", image=back_icon, fg_color="#D9D9D9", cursor="hand2")
-back_label.place(x=20, y=20)
-back_label.bind("<Button-1>", lambda e: go_back())
-
-# Read logged-in email
-try:
-    with open("user_email.txt", "r") as f:
-        customer_email = f.read().strip().replace('\n', '').replace('\r', '')
-except FileNotFoundError:
-    messagebox.showerror("Error", "User email file not found.")
-    modify_app.destroy()
-    exit()
-
-# Form Container
-form_frame = ctk.CTkFrame(modify_app, fg_color="#7F5B6A")
-form_frame.pack(pady=40, padx=60, fill="both", expand=True)
-
-# Dropdown & Event Mapping
-event_display_map = {}
-
-ctk.CTkLabel(form_frame, text="SELECT EVENT", font=("Arial", 14), text_color="white")\
-    .grid(row=0, column=0, sticky="w", padx=10, pady=(10, 2))
-
-event_dropdown = ctk.CTkComboBox(
-    form_frame,
-    width=300,
-    height=40,
-    font=("Arial", 14),
-    state="readonly",
-    button_color="gray",
-    dropdown_font=("Arial", 14),
-    dropdown_text_color="black",
-    dropdown_fg_color="white",
-    dropdown_hover_color="#dddddd",
-    command=lambda _: populate_event_fields()
-)
-event_dropdown.grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 20))
-
-# Date Entry
-ctk.CTkLabel(form_frame, text="EVENT DATE", font=("Arial", 14), text_color="white")\
-    .grid(row=2, column=0, sticky="w", padx=10, pady=(10, 2))
-date_entry = ctk.CTkEntry(form_frame, width=950, height=40)
-date_entry.grid(row=3, column=0, columnspan=3, padx=10, pady=(0, 10))
-date_entry.bind("<Button-1>", lambda e: show_calendar())
-
-# Location Entry
-ctk.CTkLabel(form_frame, text="LOCATION", font=("Arial", 14), text_color="white")\
-    .grid(row=4, column=0, sticky="w", padx=10, pady=(10, 2))
-location_entry = ctk.CTkEntry(form_frame, width=950, height=40)
-location_entry.grid(row=5, column=0, columnspan=3, padx=10, pady=(0, 10))
-
-# Save Button
-save_button = ctk.CTkButton(form_frame, text="SAVE CHANGES", width=160, height=40, command=lambda: save_changes())
-save_button.grid(row=6, column=0, columnspan=3, pady=80)
-
-# DB Update
-def update_event(event_id, new_date, new_location):
+# Fetch events
+def fetch_events():
     try:
         conn = mysql.connector.connect(
             host="141.209.241.57",
@@ -119,96 +71,63 @@ def update_event(event_id, new_date, new_location):
             password="mypass",
             database="BIS698W1830_GRP1"
         )
-        cursor = conn.cursor()
-        query = """
-            UPDATE events
-            SET date = %s, location = %s
-            WHERE id = %s
-        """
-        cursor.execute(query, (new_date, new_location, event_id))
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        messagebox.showerror("Database Error", str(e))
-        return False
-
-# Calendar popup
-def show_calendar():
-    top = tk.Toplevel(modify_app)
-    top.title("Select Date")
-    cal = Calendar(top, selectmode='day', date_pattern='yyyy-mm-dd')
-    cal.pack(padx=10, pady=10)
-
-    def get_date():
-        selected_date = cal.get_date()
-        date_entry.delete(0, tk.END)
-        date_entry.insert(0, selected_date)
-        top.destroy()
-
-    ctk.CTkButton(top, text="OK", command=get_date).pack(pady=5)
-
-# Save Function
-def save_changes():
-    selected = event_dropdown.get()
-    if selected not in event_display_map:
-        messagebox.showwarning("Missing Selection", "Please select an event to update.")
-        return
-
-    event_id, _, _ = event_display_map[selected]
-    new_date = date_entry.get()
-    new_location = location_entry.get()
-
-    if not all([new_date, new_location]):
-        messagebox.showwarning("Missing Fields", "Please fill in all fields.")
-        return
-
-    success = update_event(event_id, new_date, new_location)
-    if success:
-        messagebox.showinfo("Success", "Event updated successfully!")
-
-# Fill fields from selected event
-def populate_event_fields():
-    selected = event_dropdown.get()
-    if selected in event_display_map:
-        _, date, location = event_display_map[selected]
-        date_entry.delete(0, tk.END)
-        date_entry.insert(0, date)
-        location_entry.delete(0, tk.END)
-        location_entry.insert(0, location)
-
-# Load Events to dropdown
-def load_customer_events():
-    global event_display_map
-    try:
-        conn = mysql.connector.connect(
-            host="141.209.241.57",
-            user="tiruv1h",
-            password="mypass",
-            database="BIS698W1830_GRP1"
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, event_name, date, location FROM events WHERE email = %s ORDER BY date DESC", (customer_email,))
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM events")
         events = cursor.fetchall()
         conn.close()
-
-        options = []
-        event_display_map = {}
-        for eid, name, date, location in events:
-            formatted_date = date.strftime('%Y-%m-%d') if isinstance(date, datetime) else str(date)
-            display_text = f"{name} ({formatted_date})"
-            options.append(display_text)
-            event_display_map[display_text] = (eid, formatted_date, location)
-
-        event_dropdown.configure(values=options)
-        if options:
-            event_dropdown.set(options[0])
-            populate_event_fields()
-        else:
-            messagebox.showinfo("No Events", "No events found for this customer.")
+        return events
     except Exception as e:
         messagebox.showerror("Database Error", str(e))
+        return []
 
-# Load dropdown
-load_customer_events()
-modify_app.mainloop()
+# Generate Report Function with timestamped filename and cleaned format
+def generate_report():
+    events = fetch_events()
+    if not events:
+        messagebox.showwarning("No Events", "No event data available.")
+        return
+
+    df = pd.DataFrame(events)
+
+    # Format date and drop ID column
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    df['date'] = df['date'].dt.strftime('%d %B %Y')
+    if 'id' in df.columns:
+        df.drop(columns=['id'], inplace=True)
+
+    upcoming = df[df['date'] >= datetime.now().strftime('%d %B %Y')].shape[0]
+    total_events = df.shape[0]
+    statuses = df['status'].value_counts().to_dict() if 'status' in df.columns else {}
+
+    summary_data = {
+        "Metric": ["Total Events", "Upcoming Events"] + list(statuses.keys()),
+        "Value": [total_events, upcoming] + list(statuses.values())
+    }
+    summary_df = pd.DataFrame(summary_data)
+
+    # Timestamped filename suggestion
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    default_filename = f"Admin_Event_Report_{timestamp}.xlsx"
+
+    base_path = filedialog.asksaveasfilename(
+        defaultextension=".xlsx",
+        initialfile=default_filename,
+        filetypes=[("Excel files", "*.xlsx")]
+    )
+    if not base_path:
+        return
+
+    with pd.ExcelWriter(base_path, engine="openpyxl") as writer:
+        summary_df.to_excel(writer, sheet_name="Summary Report", index=False)
+        df.to_excel(writer, sheet_name="All Events Data", index=False)
+
+    messagebox.showinfo("Success", f"Report saved to:\n{base_path}")
+
+# Generate Button
+generate_button = ctk.CTkButton(
+    admin_dashboard, text="📥 Generate Reports", font=("Arial", 13, "bold"),
+    command=generate_report, width=160, height=35
+)
+generate_button.place(x=920, y=85)
+
+admin_dashboard.mainloop()
