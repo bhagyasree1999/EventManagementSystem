@@ -81,6 +81,8 @@ def fetch_events():
         return []
 
 # Generate Report Function with timestamped filename and cleaned format
+from openpyxl.styles import Font, Alignment, PatternFill
+
 def generate_report():
     events = fetch_events()
     if not events:
@@ -105,7 +107,7 @@ def generate_report():
     }
     summary_df = pd.DataFrame(summary_data)
 
-    # Timestamped filename suggestion
+    # Timestamped filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     default_filename = f"Admin_Event_Report_{timestamp}.xlsx"
 
@@ -118,23 +120,31 @@ def generate_report():
         return
 
     with pd.ExcelWriter(base_path, engine="openpyxl") as writer:
-        workbook = writer.book
+        summary_df.to_excel(writer, sheet_name="Summary Report", index=False, startrow=2)
+        df.to_excel(writer, sheet_name="All Events Data", index=False, startrow=2)
 
-        # Write Summary Report with heading
-        summary_sheet = workbook.create_sheet("Summary Report")
+        workbook = writer.book
+        summary_sheet = workbook["Summary Report"]
+        events_sheet = workbook["All Events Data"]
+
+        # Define style
+        heading_font = Font(bold=True, size=14, color="FFFFFF")
+        heading_alignment = Alignment(horizontal="center", vertical="center")
+        heading_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+
+        # Apply to Summary Report
         summary_sheet["A1"] = "Admin Event Summary Report"
         summary_sheet.merge_cells("A1:B1")
-        summary_sheet["A1"].font = summary_sheet["A1"].font.copy(bold=True, size=14)
+        summary_sheet["A1"].font = heading_font
+        summary_sheet["A1"].alignment = heading_alignment
+        summary_sheet["A1"].fill = heading_fill
 
-        summary_df.to_excel(writer, sheet_name="Summary Report", index=False, startrow=2)
-
-        # Write All Events Data with heading
-        events_sheet = workbook.create_sheet("All Events Data")
+        # Apply to All Events Data
         events_sheet["A1"] = "Detailed Event Data"
         events_sheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(df.columns))
-        events_sheet["A1"].font = events_sheet["A1"].font.copy(bold=True, size=14)
-
-        df.to_excel(writer, sheet_name="All Events Data", index=False, startrow=2)
+        events_sheet["A1"].font = heading_font
+        events_sheet["A1"].alignment = heading_alignment
+        events_sheet["A1"].fill = heading_fill
 
     messagebox.showinfo("Success", f"Report saved to:\n{base_path}")
 
