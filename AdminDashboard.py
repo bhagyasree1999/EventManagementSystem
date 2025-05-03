@@ -118,8 +118,23 @@ def generate_report():
         return
 
     with pd.ExcelWriter(base_path, engine="openpyxl") as writer:
-        summary_df.to_excel(writer, sheet_name="Summary Report", index=False)
-        df.to_excel(writer, sheet_name="All Events Data", index=False)
+        workbook = writer.book
+
+        # Write Summary Report with heading
+        summary_sheet = workbook.create_sheet("Summary Report")
+        summary_sheet["A1"] = "Admin Event Summary Report"
+        summary_sheet.merge_cells("A1:B1")
+        summary_sheet["A1"].font = summary_sheet["A1"].font.copy(bold=True, size=14)
+
+        summary_df.to_excel(writer, sheet_name="Summary Report", index=False, startrow=2)
+
+        # Write All Events Data with heading
+        events_sheet = workbook.create_sheet("All Events Data")
+        events_sheet["A1"] = "Detailed Event Data"
+        events_sheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(df.columns))
+        events_sheet["A1"].font = events_sheet["A1"].font.copy(bold=True, size=14)
+
+        df.to_excel(writer, sheet_name="All Events Data", index=False, startrow=2)
 
     messagebox.showinfo("Success", f"Report saved to:\n{base_path}")
 
