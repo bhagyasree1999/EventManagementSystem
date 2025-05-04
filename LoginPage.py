@@ -1,11 +1,13 @@
 import customtkinter as ctk
-from PIL import Image
+from PIL import Image, ImageTk
 from customtkinter import CTkImage
 import subprocess
 import mysql.connector
 from tkinter import messagebox
 import keyboard
 import ctypes
+from itertools import cycle
+import threading
 
 app = ctk.CTk(fg_color="#D9D9D9")
 app.title("Event Ease Login Page")
@@ -60,15 +62,13 @@ password_entry = ctk.CTkEntry(center_frame, text_color="black", font=('inter', 1
                                fg_color="#FEFEFE", show="*", textvariable=password_var)
 password_entry.place(x=field_x, y=180)
 
-# CapsLock warning label
-capslock_label = ctk.CTkLabel(center_frame, text="Caps Lock is ON", text_color="red",
-                              font=('inter', 12))
+# CapsLock warning
+capslock_label = ctk.CTkLabel(center_frame, text="Caps Lock is ON", text_color="red", font=('inter', 12))
 capslock_label.place(x=field_x, y=230)
-capslock_label.place_forget()  # Hide it initially
+capslock_label.place_forget()
 
 monitoring = False
 
-# Monitor Caps Lock when in Password field
 def monitor_capslock():
     if monitoring:
         capslock_on = bool(ctypes.WinDLL("User32.dll").GetKeyState(0x14))
@@ -88,11 +88,10 @@ def stop_monitoring(event):
     monitoring = False
     capslock_label.place_forget()
 
-# Bind Password Entry
 password_entry.bind("<FocusIn>", start_monitoring)
 password_entry.bind("<FocusOut>", stop_monitoring)
 
-# Toggle Password Visibility
+# Toggle Password
 def toggle_password_visibility():
     if show_password.get():
         password_entry.configure(show="")
@@ -104,7 +103,7 @@ ctk.CTkCheckBox(center_frame, text="Show Password", variable=show_password,
                 command=toggle_password_visibility, font=('inter', 12),
                 text_color="#3F5861", checkbox_width=18, checkbox_height=18).place(x=field_x + 240, y=230)
 
-# Role selection
+# Role dropdown
 ctk.CTkLabel(center_frame, text="Role", text_color="#3F5861", font=('inter', 15, 'bold')).place(x=field_x - 4, y=257)
 selected_role = ctk.StringVar(value="Select a Role")
 
@@ -129,11 +128,9 @@ def toggle_dropdown():
             app.dropdown_window.destroy()
 
         for role in ["ADMIN", "CUSTOMER", "STAFF"]:
-            ctk.CTkButton(app.dropdown_window, text=role, width=field_width,
-                          height=45, font=('inter', 13),
-                          fg_color="#F3F3F3", text_color="#000000",
-                          hover_color="#D6D6D6",
-                          command=lambda r=role: select(r)).pack()
+            ctk.CTkButton(app.dropdown_window, text=role, width=field_width, height=45,
+                          font=('inter', 13), fg_color="#F3F3F3", text_color="#000000",
+                          hover_color="#D6D6D6", command=lambda r=role: select(r)).pack()
 
 role_btn = ctk.CTkButton(center_frame,
                          text="Select a Role" + " " * 75 + "▼",
@@ -148,56 +145,69 @@ role_btn = ctk.CTkButton(center_frame,
                          corner_radius=6)
 role_btn.place(x=field_x, y=291)
 
-# Login function
+# GIF Loader
+gif_label = ctk.CTkLabel(center_frame, text="")
+gif_label.place(x=(951 - 100) // 2, y=330)
+gif_label.place_forget()
+
+
+
+# Login logic
 def login():
-    email = email_entry.get()
-    password = password_var.get()
-    role = selected_role.get()
 
-    if role == "Select a Role":
-        messagebox.showerror("Login Failed", "Please select a role.")
-        return
 
-    try:
-        conn = mysql.connector.connect(
-            host="141.209.241.57",
-            user="tiruv1h",
-            password="mypass",
-            database="BIS698W1830_GRP1"
-        )
-        cursor = conn.cursor()
-        query = "SELECT * FROM details WHERE email=%s AND password=%s AND role=%s"
-        cursor.execute(query, (email, password, role))
-        result = cursor.fetchone()
+    def threaded_login():
+        email = email_entry.get()
+        password = password_var.get()
+        role = selected_role.get()
 
-        if result:
-            if role == "ADMIN":
-                open_admindashboard()
-            elif role == "CUSTOMER":
-                with open("user_info.txt", "w") as f1:
-                    f1.write(result[1])
+        if role == "Select a Role":
+            gif_label.place_forget()
+            messagebox.showerror("Login Failed", "Please select a role.")
+            return
 
-                with open("user_email.txt", "w") as f2:
-                    f2.write(email)
+        try:
+            conn = mysql.connector.connect(
+                host="141.209.241.57",
+                user="surak1m",
+                password="mypass",
+                database="BIS698W1830_GRP1"
+            )
+            cursor = conn.cursor()
+            query = "SELECT * FROM details WHERE email=%s AND password=%s AND role=%s"
+            cursor.execute(query, (email, password, role))
+            result = cursor.fetchone()
+            print("Login result:", result)
 
-                open_customerdashboard()
-            elif role == "STAFF":
-                open_staffdashboard()
-        else:
-            messagebox.showerror("Access Denied", "You don't have access to this role or credentials are incorrect.")
+            if result:
+                if role == "ADMIN":
+                    app.after(100, open_admindashboard)
+                elif role == "CUSTOMER":
+                    with open("user_info.txt", "w") as f:
+                        f.write(result[1])
+                    with open("user_email.txt", "w") as f:
+                        f.write(result[3])
+                    app.after(100, open_customerdashboard)
+                elif role == "STAFF":
+                    app.after(100, open_staffdashboard)
+            else:
+                messagebox.showerror("Access Denied", "Invalid credentials or role.")
 
-        cursor.close()
-        conn.close()
+            cursor.close()
+            conn.close()
 
-    except mysql.connector.Error as err:
-        messagebox.showerror("Database Error", f"Error: {err}")
+        except mysql.connector.Error as err:
+            gif_label.place_forget()
+            messagebox.showerror("Database Error", f"Error: {err}")
 
-# Login Button
+    threading.Thread(target=threaded_login, daemon=True).start()
+
+# Login button
 ctk.CTkButton(center_frame, text="Login", text_color="#FFFFFF", width=146, height=45,
               fg_color="#7F5B6A", hover_color="grey", font=('inter', 14),
               command=login).place(x=(951 - 146) // 2, y=381)
 
-# Sign Up Link
+# Sign up
 signup_label = ctk.CTkLabel(center_frame, text="Don’t have an account? Sign Up",
                             text_color="#1E1E1E", font=('Inter', 16), cursor="hand2",
                             width=951, anchor="center", justify="center")
